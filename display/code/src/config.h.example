@@ -1,0 +1,6 @@
+#define IO_USERNAME "default"
+#define IO_KEY "default"
+#define WIFI_SSID "default"
+#define WIFI_PASS "default"
+#define TEMP_C_FEED "default"
+#define HUMIDITY_FEED "default"
