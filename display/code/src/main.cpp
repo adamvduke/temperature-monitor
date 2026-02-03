@@ -32,7 +32,7 @@
 #define CONNECT_ITERATION_DELAY 2000
 
 #define BORDER_WIDTH 3
-#define DEFAULT_DATA_VALUE -50.0  // nearly impossible temp and definitely impossible humidty
+#define DEFAULT_DATA_VALUE -99.0  // impossible temp and humidty
 
 // https://www.adafruit.com/product/4777 - 296 x 128
 // https://github.com/adafruit/Adafruit_EPD/blob/master/src/panels/ThinkInk_290_Grayscale4_EAAMFGN.h
@@ -46,11 +46,6 @@ AdafruitIO_WiFi io(IO_USERNAME, IO_KEY, WIFI_SSID, WIFI_PASS);
 // data feeds
 AdafruitIO_Feed *tempFeed = io.feed(TEMP_C_FEED);
 AdafruitIO_Feed *humidityFeed = io.feed(HUMIDITY_FEED);
-
-// XX.XX C\n
-// XX.XX F\n
-// XX.XX %
-char buffer[32];
 
 struct ProgramState {
   // tracking the last time each of the actions was triggered
@@ -70,12 +65,12 @@ struct ProgramState {
 
 ProgramState st;
 
-void updateTemp(AdafruitIO_Data *data);
-void updateHumidity(AdafruitIO_Data *data);
-void updateDisplay(int borderWidth, uint16_t fillColor, uint16_t drawColor);
 float cToF(float celcius);
 void drawBorder(int borderWidth, uint16_t color);
 void drawPaddedText(int xoff, int yoff, const char *text, int len, uint16_t color);
+void updateDisplay(int borderWidth, uint16_t fillColor, uint16_t drawColor);
+void updateHumidity(AdafruitIO_Data *data);
+void updateTemp(AdafruitIO_Data *data);
 
 void setup() {
   Serial.begin(115200);
@@ -152,16 +147,24 @@ void updateHumidity(AdafruitIO_Data *data) {
 }
 
 void updateDisplay(int borderWidth, uint16_t fillColor, uint16_t drawColor) {
-  float far = cToF(st.lastTemp);
-  int len = snprintf(buffer, sizeof(buffer), "%.2f C\n%.2f F\n%.2f %%", st.lastTemp, far, st.lastHum);
+  // XXX.XX C\n
+  // XXX.XX F\n
+  // XXX.XX %
+  char buffer[32];
+
+  // format directly into buffer with right-alignment
+  int offset = 0;
+  offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%6.2f C\n", st.lastTemp);
+  offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%6.2f F\n", cToF(st.lastTemp));
+  offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%6.2f %%", st.lastHum);
 
   // only update the display if there's something relevant to show
-  if (len > 0) {
+  if (offset > 0) {
     display.fillScreen(fillColor);
     drawBorder(borderWidth, drawColor);
     int xoff = BORDER_WIDTH * 15;  // start to the right a bit
     int yoff = BORDER_WIDTH * 2;   // start down from the border a bit
-    drawPaddedText(xoff, yoff, buffer, len, drawColor);
+    drawPaddedText(xoff, yoff, buffer, offset, drawColor);
     display.display();
   }
 }
