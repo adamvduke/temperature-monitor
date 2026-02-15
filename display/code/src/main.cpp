@@ -6,11 +6,6 @@
 #define SRAM_CS 16
 #define EPD_CS 0
 #define EPD_DC 15
-
-// Feather ESP8266 default pins (SDA=4, SCL=5)
-#define PIN_SDA 4
-#define PIN_SCL 5
-
 #define EPD_RESET -1
 #define EPD_BUSY -1
 
@@ -77,7 +72,7 @@ void setup() {
   display.begin();
 
   // Initialize I2C
-  Wire.begin(PIN_SDA, PIN_SCL);
+  Wire.begin(SDA, SCL);
 
   // connect to io.adafruit.com
   io.connect();
